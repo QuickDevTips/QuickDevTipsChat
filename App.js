@@ -7,48 +7,59 @@
 import React, { Component } from 'react';
 import {
   Platform,
-  StyleSheet,
-  Text,
-  View
+  View,
+  FlatList
 } from 'react-native';
+import firebase from 'react-native-firebase';
+import Item from './Item'; // we'll create this next
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
 
-export default class App extends Component<{}> {
+export default class App extends Component {
+  constructor(){
+    super();
+    this.ref = firebase.firestore().collection('testcs');
+    this.unsubscribe = null;
+    this.state = {
+        textInput: '',
+        loading: true,
+        todos: [],
+    };
+  }
+
+
+  componentDidMount() {
+    this.unsubscribe = this.ref.onSnapshot(this.onCollectionUpdate) 
+  }
+
+  componentWillUnmount() {
+    this.unsubscribe();
+  }
+  onCollectionUpdate = (querySnapshot) => {
+    const todos = [];
+    querySnapshot.forEach((doc) => {
+      const { Name, Age } = doc.data();
+      todos.push({
+        key: doc.id,
+        doc, // DocumentSnapshot
+        Name,
+        Age,
+      });
+    });
+    this.setState({ 
+      todos,
+      loading: false,
+   });
+  }
+
+
   render() {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Awesome Chat!!!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit App.js
-        </Text>
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={this.state.todos}
+          renderItem={({ item }) => <Item {...item} />}
+        />
       </View>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 40,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-});
