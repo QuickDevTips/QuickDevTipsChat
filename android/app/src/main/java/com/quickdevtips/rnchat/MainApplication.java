@@ -1,4 +1,4 @@
-package com.quickdevtipschat;
+package com.quickdevtips.rnchat;
 
 import android.app.Application;
 
